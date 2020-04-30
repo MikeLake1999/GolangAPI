@@ -58,31 +58,39 @@ func GetGallery(ctx *gin.Context) {
 	}
 	ctx.JSON(200, gallery)
 }
-func UpdateGallery(ctx *gin.Context) {
+func GetPhotoOfGallery(ctx *gin.Context) {
 	id := ctx.Param("id")
 
-	gallery, err := services.GetGallery(id)
+	gallery, err := services.GetPhotosGallery(id)
 	fmt.Println(gallery)
 	if err != nil {
 		ctx.AbortWithError(400, err)
 		return
 	}
+	ctx.JSON(200, gallery)
+}
+func Publication(ctx *gin.Context) {
+	id := ctx.Param("id")
 
-	newGallery := &Galla{}
-	if err = ctx.BindJSON(&newGallery); err != nil {
+	gallery, err := services.Publication(id)
+	fmt.Println(gallery)
+	if err != nil {
 		ctx.AbortWithError(400, err)
 		return
 	}
-	if newGallery.Name != gallery.Name {
-		gallery.Name = newGallery.Name
+	ctx.JSON(200, gallery)
+}
+func UpdateGallery(ctx *gin.Context) {
+	id := ctx.Param("id")
+
+	newGallery := &Galla{}
+	if err := ctx.BindJSON(&newGallery); err != nil {
+		ctx.AbortWithError(400, err)
+		return
 	}
-	if newGallery.Brief != gallery.Brief {
-		gallery.Brief = newGallery.Brief
-	}
-	if newGallery.Active != gallery.Active {
-		gallery.Active = newGallery.Active
-	}
-	err = services.SaveGallery(gallery)
+
+	galleries, err := services.UpdateGallery(id, newGallery.Name, newGallery.Brief)
+	fmt.Println(galleries)
 	if err != nil {
 		ctx.AbortWithError(400, err)
 		return

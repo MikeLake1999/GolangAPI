@@ -33,6 +33,7 @@ func Create() (g *gin.Engine) {
 				ctx.Status(200)
 			})
 		}
+
 		account := v1.Group("/account")
 		{
 			// Use authentication middleware
@@ -40,6 +41,7 @@ func Create() (g *gin.Engine) {
 			// add account handlers
 			account.GET("", GetAccount)
 			account.PUT("", UpdateAccount)
+			account.PUT("/avatar", UpdateAvatar)
 			account.PUT("/password", UpdatePassword)
 			account.DELETE("", DeleteAccount)
 		}
@@ -51,8 +53,10 @@ func Create() (g *gin.Engine) {
 			// add gallery handlers
 			gallery.POST("", CreateGallery)
 			gallery.GET("", GetAllGalleries)
-			gallery.GET("/:id", GetGallery)
+			gallery.GET("/:id", GetPhotoOfGallery)
+
 			gallery.PUT("/:id", UpdateGallery)
+			gallery.PUT("/:id/publication", Publication)
 			gallery.DELETE("/:id", DeleteGallery)
 		}
 		photo := v1.Group("/photo")

@@ -14,7 +14,8 @@ type Photos struct {
 	Description string      `gorm:"type:TEXT;NOT NULL" json:"desciption"`
 	Path        string      `gorm:"type:VARCHAR(256);NOT NULL" json:"path"`
 	Size        int64       `gorm:"type:VARCHAR(256);NOT NULL" json:"size"`
+	Count       int         `json:"count"`
 	CreatedAt   time.Time   `gorm:"NOT NULL" json:"created_at"`
 	UpdatedAt   time.Time   `gorm:"NOT NULL" json:"updated_at"`
-	Reactions   []Reactions `json:"reactions,omitempty"`
+	Reactions   []Reactions `gorm:"foreignkey:PhotoId" json:"reactions,omitempty"`
 }

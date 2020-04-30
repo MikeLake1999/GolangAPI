@@ -68,6 +68,7 @@ func GetPublicAccount(id string) (account *models.Account, err error) {
 	return
 
 }
+
 func SaveAccount(account *models.Account) (err error) {
 	err = DB.Save(account).Error
 	return
@@ -107,6 +108,31 @@ func Register(email string, password string, name string, avatar string, address
 		fmt.Println(err)
 	}
 	return
+}
+func UpdateAccount(email string, name string, address string, phone string, id uint) (account models.Account, err error) {
+	account = models.Account{
+		Email:   email,
+		Name:    name,
+		Address: address,
+		Phone:   phone,
+	}
+	err = DB.Model(&account).Where("id = ?", id).Updates(&account).Error
+	if err != nil {
+		fmt.Println(err)
+	}
+	return
+
+}
+func UpdateAvatar(avatar string, id uint) (account models.Account, err error) {
+	account = models.Account{
+		Avatar: avatar,
+	}
+	err = DB.Model(&account).Where("id = ?", id).Updates(&account).Error
+	if err != nil {
+		fmt.Println(err)
+	}
+	return
+
 }
 func UpdatePassword(password string, id uint) (account models.Account, err error) {
 	bytePassword := []byte(password)
@@ -157,9 +183,40 @@ func GetGallery(id string) (gallery *models.Galleries, err error) {
 	err = DB.Where("id = ?", id).First(gallery).Error
 	return
 }
-func GetAllGalleries(accountId uint) (galleries *[]models.Galleries, err error) {
-	galleries = new([]models.Galleries)
-	err = DB.Where("account_id = ?", accountId).Find(galleries).Error
+func GetAllGalleries(accountId uint) (galleries []models.Galleries, err error) {
+	galleries = []models.Galleries{}
+	err = DB.Where("account_id = ?", accountId).Find(&galleries).Error
+	fmt.Println(len(galleries))
+	for i := 0; i < len(galleries); i++ {
+		galleries[i].Photos = []models.Photos{}
+		err = DB.Model(galleries[i]).Limit(3).Related(&(galleries[i].Photos), "Photos").Error
+		if err != nil {
+			return
+		}
+
+	}
+	fmt.Println(galleries)
+	return
+}
+func Publication(id string) (galleries models.Galleries, err error) {
+	galleries = models.Galleries{
+		Active: "active",
+	}
+	err = DB.Model(&galleries).Where("galleries.id = ?", id).Updates(&galleries).Error
+	if err != nil {
+		fmt.Println(err)
+	}
+	return
+}
+func UpdateGallery(id string, name string, brief string) (galleries models.Galleries, err error) {
+	galleries = models.Galleries{
+		Name:  name,
+		Brief: brief,
+	}
+	err = DB.Model(&galleries).Where("galleries.id = ?", id).Updates(&galleries).Error
+	if err != nil {
+		fmt.Println(err)
+	}
 	return
 }
 func GetPublicGalleries() (galleries []models.Galleries, err error) {
@@ -171,7 +228,8 @@ func GetPublicGalleries() (galleries []models.Galleries, err error) {
 	fmt.Println(len(galleries))
 	for i := 0; i < len(galleries); i++ {
 		galleries[i].Photos = []models.Photos{}
-		err = DB.Model(galleries[i]).Limit(3).Related(&(galleries[i].Photos)).Error
+		err = DB.Model(galleries[i]).Limit(3).Related(&(galleries[i].Photos), "Photos").Error
+
 		if err != nil {
 			return
 		}
@@ -180,20 +238,41 @@ func GetPublicGalleries() (galleries []models.Galleries, err error) {
 	fmt.Println(galleries)
 	return
 }
-func GetPhotosPublicGallery(id string) (photos []models.Photos, err error) {
+func GetPhotosGallery(id string) (photos []models.Photos, err error) {
 	photos = []models.Photos{}
 
-	err = DB.Select("galleries.id, galleries.brief, photos.name, galleries.active, photos.account_id").Joins("join galleries ON galleries.id = ? AND galleries.active = 'active' AND galleries.id = photos.gallery_id", id).Find(&photos).Error
+	err = DB.Select("photos.id, photos.gallery_id, photos.name, galleries.active, photos.account_id, photos.description, photos.path, photos.size").Joins("join galleries ON galleries.id = ?  AND galleries.id = photos.gallery_id", id).Find(&photos).Error
 	fmt.Println(len(photos))
 	for i := 0; i < len(photos); i++ {
-		photos[i].Reactions = []models.Reactions{}
-		err = DB.Model(photos[i]).Related(&(photos[i].Reactions)).Count(&photos).Error
+
+		err = DB.Model(photos[i]).Related(&(photos[i].Reactions), "Reactions").Error
+		fmt.Println(err)
 		if err != nil {
 			return
 		}
 
 	}
 	fmt.Println(photos)
+	return
+}
+
+func GetPhotosPublicGallery(id string) (photos []models.Photos, err error) {
+
+	photos = []models.Photos{}
+
+	err = DB.Select("photos.id, photos.gallery_id, photos.name, galleries.active, photos.account_id, photos.description, photos.path, photos.size").Joins("join galleries ON galleries.id = ? AND galleries.active = 'active' AND galleries.id = photos.gallery_id", id).Find(&photos).Error
+	// fmt.Println(len(photos))
+	// for i := 0; i < len(photos); i++ {
+	// 	count := models.Reactions{}
+	// 	err = DB.Model(photos[i]).Count(&count).Error
+	// 	fmt.Println(err)
+	// 	fmt.Printf("Count = %d\n", count)
+	// 	if err != nil {
+	// 		return
+	// 	}
+
+	// }
+	// fmt.Println(photos)
 	return
 }
 func DeleteGallery(id string) (err error) {
@@ -226,21 +305,60 @@ func CreatePhoto(accountId uint, gallery_id int, name string, description string
 	return
 
 }
-
+func UpdatePhoto(id string, name string, description string) (photo models.Photos, err error) {
+	photo = models.Photos{
+		Name:        name,
+		Description: description,
+	}
+	err = DB.Model(&photo).Where("photos.id = ?", id).Updates(&photo).Error
+	if err != nil {
+		fmt.Println(err)
+	}
+	return
+}
 func GetGalleryId(id int) (photo *[]models.Photos, err error) {
 	photo = new([]models.Photos)
 	err = DB.Where("gallery_id = ?", id).Find(photo).Error
 	return
 
 }
-func GetGalleryPublicPhoto(id string) (photos *[]models.Photos, err error) {
+func GetGalleryPublicPhoto(id string) (photos []models.Photos, err error) {
 
-	photos = new([]models.Photos)
-	err = DB.Table("photos").Joins("join reactions ON photos.id = ? AND photos.id = reactions.photo_id", id).Joins("join galleries ON galleries.id = photos.gallery_id AND galleries.active = 'active'").Find(&photos).Error
+	photos = []models.Photos{}
+
+	err = DB.Select("photos.id, photos.gallery_id, photos.name, galleries.active, photos.account_id, photos.description, photos.path, photos.size, count").Joins("join galleries ON galleries.active = 'active' AND galleries.id = photos.gallery_id").Where("photos.id = ?", id).Find(&photos).Error
+	for i := 0; i < len(photos); i++ {
+		photos[i].Reactions = []models.Reactions{}
+
+		err = DB.Model(photos[i]).Related(&(photos[i].Reactions), "Reactions").Error
+
+		if err != nil {
+			return
+		}
+
+	}
+	fmt.Println(photos)
 	return
 }
 func SavePhoto(photo *models.Photos) (err error) {
 	err = DB.Save(photo).Error
+	return
+}
+func GetPhotoAndReaction(id string) (photos []models.Photos, err error) {
+	photos = []models.Photos{}
+
+	err = DB.Where("id = ?", id).Find(&photos).Error
+	fmt.Println(len(photos))
+	for i := 0; i < len(photos); i++ {
+
+		err = DB.Model(photos[i]).Related(&(photos[i].Reactions), "Reactions").Error
+		fmt.Println(err)
+		if err != nil {
+			return
+		}
+
+	}
+	fmt.Println(photos)
 	return
 }
 func GetPhoto(id string) (photo *models.Photos, err error) {
@@ -265,11 +383,10 @@ func DeletePhoto(id string) (err error) {
 	return
 }
 
-func CreateReaction(account_id uint, photo_id int, reaction string) (reactive models.Reactions, err error) {
+func CreateReaction(account_id uint, photo_id int) (reactive models.Reactions, err error) {
 	reactive = models.Reactions{
 		AccountId: account_id,
 		PhotoId:   photo_id,
-		Reaction:  reaction,
 	}
 
 	err = DB.Create(&reactive).Error

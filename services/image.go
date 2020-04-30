@@ -34,7 +34,7 @@ func LoadImage(filename string) (img image.Image, err error) {
 }
 func (img ImageSize) Resize(w int) (dst string, err error) {
 	g := gift.New(
-		gift.Resize(w, 0, gift.LanczosResampling),
+		gift.Resize(w, 64, gift.LanczosResampling),
 	)
 	imageSrc, err := LoadImage(img.Path)
 	if err != nil {

@@ -24,6 +24,7 @@ func GetPublicPhoto(ctx *gin.Context) {
 
 	photo, err := services.GetGalleryPublicPhoto(id)
 	fmt.Println(photo)
+
 	if err != nil {
 		ctx.AbortWithError(400, err)
 		return

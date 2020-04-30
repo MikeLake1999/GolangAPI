@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"gallery/services"
+	"sync"
 
 	"github.com/gin-gonic/gin"
 )
@@ -74,35 +75,15 @@ func UpdateAccount(ctx *gin.Context) {
 		ctx.AbortWithError(401, errors.New("Unauthorized"))
 		return
 	}
-	services.Logger.Infof("Get account information by id=[%d]", accountId)
-	account, err := services.GetAccountByID(accountId.(uint))
-
-	newAccount := &Credential{}
-	if err = ctx.BindJSON(&newAccount); err != nil {
-		ctx.AbortWithError(400, err)
+	cred := &Credential{}
+	if err := ctx.BindJSON(cred); err != nil {
+		fmt.Println(err)
+		ctx.AbortWithError(400, errors.New("Error"))
 		return
 	}
-	if newAccount.Name != account.Name {
-		account.Name = newAccount.Name
-	}
 
-	if newAccount.Avatar != account.Avatar {
-		account.Avatar = newAccount.Avatar
-	}
-	if newAccount.Email != account.Email {
-		account.Email = newAccount.Email
-	}
-	if newAccount.Password != account.Password {
-		account.Password = newAccount.Password
-	}
-	if newAccount.Address != account.Address {
-		account.Address = newAccount.Address
-	}
-	if newAccount.Phone != account.Phone {
-		account.Phone = newAccount.Phone
-	}
-
-	err = services.SaveAccount(account)
+	account, err := services.UpdateAccount(cred.Email, cred.Name, cred.Address, cred.Phone, accountId.(uint))
+	fmt.Println(account)
 	if err != nil {
 		ctx.AbortWithError(400, err)
 		return
@@ -110,6 +91,54 @@ func UpdateAccount(ctx *gin.Context) {
 
 	ctx.Status(200)
 
+}
+func UpdateAvatar(ctx *gin.Context) {
+	cred := &Credential{}
+	accountId, exist := ctx.Get("account_id")
+	if !exist {
+		ctx.AbortWithError(401, errors.New("Unauthorized"))
+		return
+	}
+
+	path, size, err := saveUploadedFile(ctx)
+
+	fmt.Println(size)
+	cred.Avatar = path
+
+	image := services.ImageSize{
+		Path: path,
+	}
+	w, h, err := services.GetDimension(image.Path)
+
+	fmt.Printf("Width: %d, Height: %d\n", w, h)
+
+	resolutions := []int{64}
+	wg := sync.WaitGroup{}
+	wg.Add(len(resolutions))
+	for _, size := range resolutions {
+		go func(wg *sync.WaitGroup, size int) {
+			defer wg.Done()
+			_, err := image.Resize(size)
+			fmt.Println(err)
+		}(&wg, size)
+
+	}
+	wg.Wait()
+
+	if err != nil {
+		fmt.Println(err)
+		ctx.AbortWithError(400, errors.New("Can not save uploaded file"))
+		return
+	}
+
+	account, err := services.UpdateAvatar(cred.Avatar, accountId.(uint))
+
+	if err != nil {
+		ctx.AbortWithError(400, errors.New("Error"))
+		return
+	}
+
+	ctx.JSON(200, account)
 }
 func UpdatePassword(ctx *gin.Context) {
 
