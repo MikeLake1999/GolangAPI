@@ -62,6 +62,7 @@ func CreatePhoto(ctx *gin.Context) {
 	photo.Size = size
 
 	photos, err := services.CreatePhoto(accountId.(uint), photo.GalleryId, photo.Name, photo.Description, photo.Path, photo.Size)
+	services.Logger.Infof("Create photo by Account ID=[%d], Gallery Id=[%s], Photo Name=[%s], Description=[%s], Path=[%s], Size=[%d]", accountId, photo.GalleryId, photo.Name, photo.Description, photo.Path, photo.Size)
 	fmt.Println(photos)
 	if err != nil {
 		ctx.AbortWithError(400, errors.New("Error"))
@@ -75,7 +76,7 @@ func GetPhoto(ctx *gin.Context) {
 	id := ctx.Param("id")
 
 	photo, err := services.GetPhotoAndReaction(id)
-
+	services.Logger.Infof("Get photo By Photo ID=[%d]", id)
 	if err != nil {
 		ctx.AbortWithError(400, err)
 		return
@@ -92,6 +93,7 @@ func UpdatePhoto(ctx *gin.Context) {
 	}
 
 	photo, err := services.UpdatePhoto(id, newPhoto.Name, newPhoto.Description)
+	services.Logger.Infof("Update Photo ID=[%d], Name=[%s], Description=[%s]", id, newPhoto.Name, newPhoto.Description)
 	fmt.Println(photo)
 	if err != nil {
 		ctx.AbortWithError(400, err)
@@ -112,6 +114,7 @@ func DeletePhoto(ctx *gin.Context) {
 		return
 	}
 	err1 := services.DeletePhoto(id)
+	services.Logger.Infof("Delete Photo ID=[%d]", id)
 	if err1 != nil {
 		ctx.AbortWithError(404, errors.New("Photo Not Found!"))
 		return
@@ -134,6 +137,7 @@ func CreateReaction(ctx *gin.Context) {
 	}
 
 	reactive, err := services.CreateReaction(accountId.(uint), photo.Id)
+	services.Logger.Infof("Reaction Photo ID=[%d] By Account ID=[%d]", photo.Id, accountId)
 	fmt.Println(reactive)
 	if err != nil {
 		ctx.AbortWithError(400, errors.New("Error"))
@@ -146,6 +150,7 @@ func DeleteReaction(ctx *gin.Context) {
 	id := ctx.Param("id")
 
 	err1 := services.DeleteReaction(id)
+	services.Logger.Infof("Unreaction Photo ID=[%d]", id)
 	if err1 != nil {
 		ctx.AbortWithError(404, errors.New("Photo Not Found!"))
 		return

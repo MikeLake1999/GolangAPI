@@ -28,7 +28,7 @@ func Authentication(ctx *gin.Context) {
 		ctx.AbortWithError(401, errors.New("Invalid email or Password"))
 		return
 	}
-
+	services.Logger.Infof("Authentication with email=[%s], Password=[%s]", cred.Email, cred.Password)
 	token, err := services.Authenticate(cred.Email, cred.Password)
 	if err != nil {
 		ctx.AbortWithError(401, errors.New("Invalid email or password"))
@@ -43,8 +43,8 @@ func Registration(ctx *gin.Context) {
 		ctx.AbortWithError(400, errors.New("Error"))
 		return
 	}
-
-	account, err := services.Register(cred.Email, cred.Password, cred.Name, cred.Avatar, cred.Address, cred.Phone)
+	services.Logger.Infof("Registration account on Email=[%s], Password=[%s], Name=[%s], Address=[%s], Phone=[%s]", cred.Email, cred.Password, cred.Name, cred.Address, cred.Phone)
+	account, err := services.Register(cred.Email, cred.Password, cred.Name, cred.Address, cred.Phone)
 	fmt.Println(account)
 	if err != nil {
 		ctx.AbortWithError(400, errors.New("Error"))
@@ -83,6 +83,7 @@ func UpdateAccount(ctx *gin.Context) {
 	}
 
 	account, err := services.UpdateAccount(cred.Email, cred.Name, cred.Address, cred.Phone, accountId.(uint))
+	services.Logger.Infof("Update account Id=[%d], Email=[%s], Name=[%s], Address=[%s], Phone=[%s] ", accountId, cred.Email, cred.Name, cred.Address, cred.Phone)
 	fmt.Println(account)
 	if err != nil {
 		ctx.AbortWithError(400, err)
@@ -132,7 +133,7 @@ func UpdateAvatar(ctx *gin.Context) {
 	}
 
 	account, err := services.UpdateAvatar(cred.Avatar, accountId.(uint))
-
+	services.Logger.Infof("Update avatar by account Id=[%d], Avatar=[%s]", accountId, cred.Avatar)
 	if err != nil {
 		ctx.AbortWithError(400, errors.New("Error"))
 		return
@@ -151,6 +152,7 @@ func UpdatePassword(ctx *gin.Context) {
 	password := ctx.Param("password")
 
 	account, err := services.UpdatePassword(password, accountId.(uint))
+	services.Logger.Infof("Update password by account Id=[%d], Password=[%s]", accountId, password)
 	fmt.Println(account)
 	if err != nil {
 		ctx.AbortWithError(400, err)

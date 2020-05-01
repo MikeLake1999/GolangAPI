@@ -9,7 +9,7 @@ import (
 type Account struct {
 	Id        uint        `gorm:"PRIMARY_KEY;AUTO_INCREMENT" json:"id"`
 	Name      string      `gorm:"type:VARCHAR(256);NOT NULL" json:"name"`
-	Avatar    string      `gorm:"type:VARCHAR(256);NOT NULL" json:"avatar"`
+	Avatar    string      `gorm:"type:VARCHAR(256)" json:"avatar"`
 	Address   string      `gorm:"type:VARCHAR(256);NOT NULL" json:"address"`
 	Phone     string      `gorm:"type:VARCHAR(256);NOT NULL" json:"phone"`
 	Email     string      `gorm:"type:VARCHAR(256);NOT NULL" json:"email"`
